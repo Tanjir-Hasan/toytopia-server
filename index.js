@@ -32,14 +32,21 @@ async function run() {
         const toysCollection = client.db("toytopia").collection("allToys");
 
         // search
-        const indexKeys = { name: 1, category: 1 }; // Replace field1 and field2 with your actual field names
-        const indexOptions = { name: "nameCategory" }; // Replace index_name with the desired index name
+        const indexKeys = { name: 1, category: 1 };
+        const indexOptions = { name: "nameCategory" };
         const result = await toysCollection.createIndex(indexKeys, indexOptions);
 
         // get data
         app.get('/allToys', async (req, res) => {
             const cursor = toysCollection.find();
             const result = await cursor.toArray();
+            res.send(result);
+        });
+
+        app.get('/allToys/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await toysCollection.findOne(query);
             res.send(result);
         });
 
@@ -55,13 +62,11 @@ async function run() {
             if (req.query?.sortBy) {
                 const sortBy = req.query.sortBy;
                 if (sortBy === 'asc') {
-                    sortOptions = { price: 1 }; // Sort in ascending order by the "price" field
+                    sortOptions = { price: 1 };
                 } else if (sortBy === 'desc') {
-                    sortOptions = { price: -1 }; // Sort in descending order by the "price" field
+                    sortOptions = { price: -1 };
                 }
             }
-
-            // sortOptions = { price: 1 }
 
             const result = await toysCollection.find(query).sort(sortOptions).toArray();
             res.send(result);
