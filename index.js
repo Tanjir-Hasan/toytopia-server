@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 const app = express();
 
@@ -11,7 +12,6 @@ app.use(express.json());
 // TlvhMyittxZ7CdkC
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = "mongodb+srv://toytopia:TlvhMyittxZ7CdkC@cluster0.bb0v57f.mongodb.net/?retryWrites=true&w=majority";
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -36,13 +36,43 @@ async function run() {
             const cursor = toysCollection.find();
             const result = await cursor.toArray();
             res.send(result);
-        })
+        });
+
+        // single user
+        app.get('/userToys', async (req, res) => {
+
+            console.log(req.query)
+            let query = {};
+
+            if (req.query?.email) {
+                query = { email: req.query.email }
+            };
+
+            const result = await toysCollection.find(query).toArray();
+            res.send(result);
+        });
 
         // crate toys
         app.post('/allToys', async (req, res) => {
             const toy = req.body;
             console.log(toy)
             const result = await toysCollection.insertOne(toy);
+            res.send(result);
+        });
+
+        // update
+        // app.patch('allToys/:id', async (req, res) => {
+        //     const id = req.params.id;
+        //     const filter = { _id: new ObjectId(id) };
+        //     const 
+        // })
+
+        // delete
+        app.delete('/userToys/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id)
+            const query = { _id: new ObjectId(id) };
+            const result = await toysCollection.deleteOne(query);
             res.send(result);
         })
 
