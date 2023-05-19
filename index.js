@@ -31,6 +31,11 @@ async function run() {
         // 
         const toysCollection = client.db("toytopia").collection("allToys");
 
+        // search
+        const indexKeys = { name: 1, category: 1 }; // Replace field1 and field2 with your actual field names
+        const indexOptions = { name: "nameCategory" }; // Replace index_name with the desired index name
+        const result = await toysCollection.createIndex(indexKeys, indexOptions);
+
         // get data
         app.get('/allToys', async (req, res) => {
             const cursor = toysCollection.find();
@@ -59,6 +64,20 @@ async function run() {
             const result = await toysCollection.insertOne(toy);
             res.send(result);
         });
+
+        // 
+        app.get("/getToysByText/:text", async (req, res) => {
+            const text = req.params.text;
+            const result = await toysCollection
+              .find({
+                $or: [
+                  { title: { $regex: text, $options: "i" } },
+                  { category: { $regex: text, $options: "i" } },
+                ],
+              })
+              .toArray();
+            res.send(result);
+          });
 
         // update
         // app.patch('allToys/:id', async (req, res) => {
