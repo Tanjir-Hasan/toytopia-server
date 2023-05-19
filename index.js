@@ -45,21 +45,32 @@ async function run() {
 
         // single user
         app.get('/userToys', async (req, res) => {
-
-            console.log(req.query)
             let query = {};
 
             if (req.query?.email) {
-                query = { email: req.query.email }
-            };
+                query = { email: req.query.email };
+            }
 
-            const result = await toysCollection.find(query).toArray();
+            let sortOptions = {};
+            if (req.query?.sortBy) {
+                const sortBy = req.query.sortBy;
+                if (sortBy === 'asc') {
+                    sortOptions = { price: 1 }; // Sort in ascending order by the "price" field
+                } else if (sortBy === 'desc') {
+                    sortOptions = { price: -1 }; // Sort in descending order by the "price" field
+                }
+            }
+
+            // sortOptions = { price: 1 }
+
+            const result = await toysCollection.find(query).sort(sortOptions).toArray();
             res.send(result);
         });
 
         // crate toys
         app.post('/allToys', async (req, res) => {
             const toy = req.body;
+            toy.price = Number(toy.price);
             console.log(toy)
             const result = await toysCollection.insertOne(toy);
             res.send(result);
@@ -69,15 +80,15 @@ async function run() {
         app.get("/getToysByText/:text", async (req, res) => {
             const text = req.params.text;
             const result = await toysCollection
-              .find({
-                $or: [
-                  { title: { $regex: text, $options: "i" } },
-                  { category: { $regex: text, $options: "i" } },
-                ],
-              })
-              .toArray();
+                .find({
+                    $or: [
+                        { title: { $regex: text, $options: "i" } },
+                        { category: { $regex: text, $options: "i" } },
+                    ],
+                })
+                .toArray();
             res.send(result);
-          });
+        });
 
         // update
         // app.patch('allToys/:id', async (req, res) => {
