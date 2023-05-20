@@ -1,12 +1,20 @@
 const express = require('express');
-const cors = require('cors');
 require("dotenv").config();
+const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 const app = express();
 
 // middleware
-app.use(cors());
+
+const corsOptions = {
+    origin: '*',
+    credentials: true,
+    optionSuccessStatus: 200,
+}
+
+app.use(cors(corsOptions))
+
 app.use(express.json());
 
 
@@ -28,11 +36,6 @@ async function run() {
 
         // 
         const toysCollection = client.db("toytopia").collection("allToys");
-
-        // search
-        const indexKeys = { name: 1, category: 1 };
-        const indexOptions = { name: "nameCategory" };
-        const result = await toysCollection.createIndex(indexKeys, indexOptions);
 
         // get data
         app.get('/allToys', async (req, res) => {
@@ -79,26 +82,22 @@ async function run() {
             res.send(result);
         });
 
+
+        // 
+        app.get('/allToys/searchByName/:name', async (req, res) => {
+            const name = req.params.name;
+            const query = { name: { $regex: name, $options: 'i' } }; 
+            const result = await toysCollection.find(query).toArray();
+            res.send(result);
+        });
+
+
         // crate toys
         app.post('/allToys', async (req, res) => {
             const toy = req.body;
             toy.price = Number(toy.price);
             console.log(toy)
             const result = await toysCollection.insertOne(toy);
-            res.send(result);
-        });
-
-        // 
-        app.get("/getToysByText/:text", async (req, res) => {
-            const text = req.params.text;
-            const result = await toysCollection
-                .find({
-                    $or: [
-                        { name: { $regex: text, $options: "i" } },
-                        { category: { $regex: text, $options: "i" } },
-                    ],
-                })
-                .toArray();
             res.send(result);
         });
 
@@ -111,10 +110,14 @@ async function run() {
 
             const updateToy = {
                 $set: {
+                    email: updatedToy.email,
                     name: updatedToy.name,
+                    sellerName: updatedToy.sellerName,
+                    category: updatedToy.category,
                     description: updatedToy.description,
                     price: updatedToy.price,
-                    quantity: updatedToy.quantity
+                    quantity: updatedToy.quantity,
+                    photoUrl: updatedToy.photoUrl
                 },
             };
 
@@ -123,7 +126,7 @@ async function run() {
         })
 
         // delete
-        app.delete('/userToys/:id', async (req, res) => {
+        app.delete('/deleteToys/:id', async (req, res) => {
             const id = req.params.id;
             console.log(id)
             const query = { _id: new ObjectId(id) };
@@ -131,13 +134,8 @@ async function run() {
             res.send(result);
         })
 
-
-
-
-
-
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
@@ -151,11 +149,6 @@ app.get("/", (req, res) => {
     res.send("Server is running")
 });
 
-
-// app.get('/data', (req, res) => {
-//     res.send(data);
-//     console.log(data)
-// });
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`)
