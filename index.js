@@ -41,12 +41,21 @@ async function run() {
             res.send(result);
         });
 
+        // load single data
         app.get('/allToys/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await toysCollection.findOne(query);
             res.send(result);
         });
+
+        // load single data to update
+        app.get('/userToys/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await toysCollection.findOne(query);
+            res.send(result);
+        })
 
         // single user
         app.get('/userToys', async (req, res) => {
@@ -94,11 +103,24 @@ async function run() {
         });
 
         // update
-        // app.patch('allToys/:id', async (req, res) => {
-        //     const id = req.params.id;
-        //     const filter = { _id: new ObjectId(id) };
-        //     const 
-        // })
+        app.put('/userToys/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            // const options = { upsert: true };
+            const updatedToy = req.body;
+
+            const updateToy = {
+                $set: {
+                    name: updatedToy.name,
+                    description: updatedToy.description,
+                    price: updatedToy.price,
+                    quantity: updatedToy.quantity
+                },
+            };
+
+            const result = await toysCollection.updateOne(filter, updateToy);
+            res.send(result);
+        })
 
         // delete
         app.delete('/userToys/:id', async (req, res) => {
