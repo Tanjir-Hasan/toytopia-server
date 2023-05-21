@@ -7,13 +7,13 @@ const app = express();
 
 // middleware
 
-const corsOptions = {
-    origin: '*',
+const corsConfig = {
+    origin: "*",
     credentials: true,
-    optionSuccessStatus: 200,
+    methods: ['GET', 'POST', 'PUT', 'DELETE']
 }
-
-app.use(cors(corsOptions))
+app.use(cors(corsConfig))
+app.options("", cors(corsConfig))
 
 app.use(express.json());
 
@@ -38,11 +38,11 @@ async function run() {
         const toysCollection = client.db("toytopia").collection("allToys");
 
         // 
-        const toys = await toysCollection.find().toArray();
-        toys.forEach(async (toy) => {
-            const price = Number(toy.price);
-            await toysCollection.updateOne({ _id: toy._id }, { $set: { price: price } });
-        });
+        // const toys = await toysCollection.find().toArray();
+        // toys.forEach(async (toy) => {
+        //     const price = Number(toy.price);
+        //     await toysCollection.updateOne({ _id: toy._id }, { $set: { price: price } });
+        // });
 
         // get data
         app.get('/allToys', async (req, res) => {
