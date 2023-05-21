@@ -32,10 +32,17 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        // await client.connect();
+        client.connect();
 
         // 
         const toysCollection = client.db("toytopia").collection("allToys");
+
+        // 
+        const toys = await toysCollection.find().toArray();
+        toys.forEach(async (toy) => {
+            const price = Number(toy.price);
+            await toysCollection.updateOne({ _id: toy._id }, { $set: { price: price } });
+        });
 
         // get data
         app.get('/allToys', async (req, res) => {
@@ -86,7 +93,7 @@ async function run() {
         // 
         app.get('/allToys/searchByName/:name', async (req, res) => {
             const name = req.params.name;
-            const query = { name: { $regex: name, $options: 'i' } }; 
+            const query = { name: { $regex: name, $options: 'i' } };
             const result = await toysCollection.find(query).toArray();
             res.send(result);
         });
